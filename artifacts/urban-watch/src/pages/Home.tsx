@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, FeatureGroup, Rectangle, Popup } from "react-l
 import { EditControl } from "react-leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
 import L, { type DrawEvents } from "leaflet";
-import { useListChangeEvents, useGetFeedSummary, useCreateAoi, getListAoisQueryKey } from "@workspace/api-client-react";
+import { useListChangeEvents, useGetFeedSummary, useCreateAoi, getListAoisQueryKey, getListChangeEventsQueryKey, getGetFeedSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +13,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  const { data: events } = useListChangeEvents(undefined, { query: { refetchInterval: 30000, queryKey: [] } });
-  const { data: feedSummary } = useGetFeedSummary({ query: { refetchInterval: 30000, queryKey: [] } });
+  const { data: events } = useListChangeEvents(undefined, { query: { refetchInterval: 30000, queryKey: getListChangeEventsQueryKey() } });
+  const { data: feedSummary } = useGetFeedSummary({ query: { refetchInterval: 30000, queryKey: getGetFeedSummaryQueryKey() } });
   const createAoi = useCreateAoi();
   const queryClient = useQueryClient();
   const { toast } = useToast();
