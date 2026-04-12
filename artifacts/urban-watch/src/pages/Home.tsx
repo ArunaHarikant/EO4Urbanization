@@ -72,7 +72,7 @@ export default function Home() {
               position="topright"
               onCreated={handleCreated}
               draw={{
-                rectangle: true,
+                rectangle: { showArea: false },
                 polygon: false,
                 circle: false,
                 circlemarker: false,
