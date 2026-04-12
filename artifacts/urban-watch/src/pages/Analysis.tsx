@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useDetectUrbanChanges } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,16 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import { Play, Loader2, RefreshCw, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import type { ChangeDetectionResult } from "@workspace/api-client-react";
+import type { LatLngBoundsExpression } from "leaflet";
+import type { GeoJsonObject } from "geojson";
 
-function ChangeMap({ geoJson, bounds }: { geoJson: any, bounds: any }) {
+function ChangeMap({ geoJson, bounds }: { geoJson: ChangeDetectionResult["geoJson"] | null; bounds: LatLngBoundsExpression | null }) {
   const map = useMap();
   if (bounds) {
     map.fitBounds(bounds);
   }
-  return geoJson ? <GeoJSON data={geoJson} style={{ color: 'hsl(0, 84%, 60%)', weight: 2, fillOpacity: 0.4 }} /> : null;
+  return geoJson ? <GeoJSON data={geoJson as unknown as GeoJsonObject} style={{ color: 'hsl(0, 84%, 60%)', weight: 2, fillOpacity: 0.4 }} /> : null;
 }
 
 export default function Analysis() {
@@ -109,7 +112,7 @@ export default function Analysis() {
 
             <div className="space-y-2">
               <Label>Data Source</Label>
-              <Select value={source} onValueChange={(val: any) => setSource(val)}>
+              <Select value={source} onValueChange={(val) => setSource(val as "sentinel1" | "landsat" | "both")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select source" />
                 </SelectTrigger>

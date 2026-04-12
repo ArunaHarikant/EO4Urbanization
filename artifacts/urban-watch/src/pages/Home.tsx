@@ -1,7 +1,8 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { MapContainer, TileLayer, FeatureGroup, Rectangle, Popup } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
+import L, { type DrawEvents } from "leaflet";
 import { useListChangeEvents, useGetFeedSummary, useCreateAoi, getListAoisQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,9 +19,9 @@ export default function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const handleCreated = (e: any) => {
-    const { layer } = e;
-    const bounds = layer.getBounds();
+  const handleCreated = (e: DrawEvents.Created) => {
+    const layer = e.layer;
+    const bounds = (layer as L.Rectangle).getBounds();
     const minLat = bounds.getSouthWest().lat;
     const minLon = bounds.getSouthWest().lng;
     const maxLat = bounds.getNorthEast().lat;
