@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "UrbanWatch"
+version = "1.0.0"
+id = "artifacts/urban-watch"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19176
+
+[services.development]
+run = "pnpm --filter @workspace/urban-watch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/urban-watch", "run", "build" ]
+publicDir = "artifacts/urban-watch/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19176"
+BASE_PATH = "/"

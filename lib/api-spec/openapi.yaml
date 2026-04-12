@@ -3,13 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: UrbanWatch API - SAR and optical satellite urban growth detection
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: scenes
+    description: Satellite scene operations
+  - name: analysis
+    description: Urban change analysis operations
+  - name: aoi
+    description: Area of Interest operations
+  - name: feed
+    description: Real-time update feed
+  - name: stats
+    description: Urban growth statistics
+
 paths:
   /healthz:
     get:
@@ -24,6 +35,321 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /scenes:
+    get:
+      operationId: listScenes
+      tags: [scenes]
+      summary: List satellite scenes
+      description: List available satellite scenes for a date range and source
+      parameters:
+        - name: source
+          in: query
+          description: Satellite data source
+          schema:
+            type: string
+            enum: [sentinel1, landsat, all]
+            default: all
+        - name: startDate
+          in: query
+          description: Start date (ISO 8601)
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          description: End date (ISO 8601)
+          schema:
+            type: string
+        - name: minLat
+          in: query
+          description: Minimum latitude of bounding box
+          schema:
+            type: number
+        - name: maxLat
+          in: query
+          description: Maximum latitude of bounding box
+          schema:
+            type: number
+        - name: minLon
+          in: query
+          description: Minimum longitude of bounding box
+          schema:
+            type: number
+        - name: maxLon
+          in: query
+          description: Maximum longitude of bounding box
+          schema:
+            type: number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of satellite scenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SatelliteScene"
+
+  /scenes/{id}:
+    get:
+      operationId: getScene
+      tags: [scenes]
+      summary: Get a satellite scene by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Satellite scene details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SatelliteScene"
+        "404":
+          description: Scene not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /aoi:
+    get:
+      operationId: listAois
+      tags: [aoi]
+      summary: List saved Areas of Interest
+      responses:
+        "200":
+          description: List of saved AOIs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AreaOfInterest"
+    post:
+      operationId: createAoi
+      tags: [aoi]
+      summary: Create a new Area of Interest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAoiBody"
+      responses:
+        "201":
+          description: Created AOI
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaOfInterest"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /aoi/{id}:
+    get:
+      operationId: getAoi
+      tags: [aoi]
+      summary: Get an Area of Interest by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Area of Interest details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaOfInterest"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAoi
+      tags: [aoi]
+      summary: Delete an Area of Interest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted successfully
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /analysis/detect:
+    post:
+      operationId: detectUrbanChanges
+      tags: [analysis]
+      summary: Detect urban changes in an area
+      description: Run urban change detection for a bounding box between two time periods using Sentinel-1 SAR and/or Landsat optical data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DetectChangesBody"
+      responses:
+        "200":
+          description: Detection results with GeoJSON overlay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangeDetectionResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /analysis/stats:
+    get:
+      operationId: getUrbanStats
+      tags: [stats]
+      summary: Get urban growth statistics time series
+      description: Returns time series of urban area statistics for an AOI
+      parameters:
+        - name: aoiId
+          in: query
+          description: Area of Interest ID (optional, defaults to entire map)
+          schema:
+            type: ["integer", "null"]
+        - name: minLat
+          in: query
+          schema:
+            type: number
+        - name: maxLat
+          in: query
+          schema:
+            type: number
+        - name: minLon
+          in: query
+          schema:
+            type: number
+        - name: maxLon
+          in: query
+          schema:
+            type: number
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: granularity
+          in: query
+          description: Time granularity for stats
+          schema:
+            type: string
+            enum: [monthly, quarterly, yearly]
+            default: monthly
+      responses:
+        "200":
+          description: Urban statistics time series
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrbanStatsResponse"
+
+  /analysis/summary:
+    get:
+      operationId: getAnalysisSummary
+      tags: [analysis]
+      summary: Get overall analysis summary
+      description: Returns aggregated overview - total urban area, recent growth rate, land use breakdown
+      parameters:
+        - name: aoiId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Analysis summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisSummary"
+
+  /feed/events:
+    get:
+      operationId: listChangeEvents
+      tags: [feed]
+      summary: List recent change detection events
+      description: Returns recent urban change events for real-time feed updates
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [sentinel1, landsat, all]
+            default: all
+        - name: minMagnitude
+          in: query
+          description: Minimum change magnitude (0.0-1.0)
+          schema:
+            type: number
+        - name: since
+          in: query
+          description: ISO 8601 timestamp - only return events after this time
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of change events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChangeEvent"
+
+  /feed/summary:
+    get:
+      operationId: getFeedSummary
+      tags: [feed]
+      summary: Get feed summary stats
+      description: Returns counts of recent events, active regions, and last update time
+      responses:
+        "200":
+          description: Feed summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +360,404 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SatelliteScene:
+      type: object
+      properties:
+        id:
+          type: integer
+        sceneId:
+          type: string
+          description: External scene identifier from the data provider
+        source:
+          type: string
+          enum: [sentinel1, landsat]
+        acquisitionDate:
+          type: string
+          description: ISO 8601 date of scene acquisition
+        cloudCoverPercent:
+          type: ["number", "null"]
+          description: Cloud cover percentage (null for SAR data)
+        minLat:
+          type: number
+        maxLat:
+          type: number
+        minLon:
+          type: number
+        maxLon:
+          type: number
+        processingLevel:
+          type: string
+          description: e.g. GRD for Sentinel-1, L2 for Landsat
+        thumbnailUrl:
+          type: ["string", "null"]
+        wmsUrl:
+          type: ["string", "null"]
+          description: WMS URL for map overlay
+        createdAt:
+          type: string
+      required:
+        - id
+        - sceneId
+        - source
+        - acquisitionDate
+        - cloudCoverPercent
+        - minLat
+        - maxLat
+        - minLon
+        - maxLon
+        - processingLevel
+        - thumbnailUrl
+        - wmsUrl
+        - createdAt
+
+    AreaOfInterest:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        minLat:
+          type: number
+        maxLat:
+          type: number
+        minLon:
+          type: number
+        maxLon:
+          type: number
+        areaKm2:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - minLat
+        - maxLat
+        - minLon
+        - maxLon
+        - areaKm2
+        - createdAt
+        - updatedAt
+
+    CreateAoiBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        minLat:
+          type: number
+        maxLat:
+          type: number
+        minLon:
+          type: number
+        maxLon:
+          type: number
+      required:
+        - name
+        - minLat
+        - maxLat
+        - minLon
+        - maxLon
+
+    DetectChangesBody:
+      type: object
+      properties:
+        minLat:
+          type: number
+        maxLat:
+          type: number
+        minLon:
+          type: number
+        maxLon:
+          type: number
+        startDate:
+          type: string
+          description: Start of the baseline period (ISO 8601)
+        endDate:
+          type: string
+          description: End of the analysis period (ISO 8601)
+        source:
+          type: string
+          enum: [sentinel1, landsat, both]
+          default: both
+      required:
+        - minLat
+        - maxLat
+        - minLon
+        - maxLon
+        - startDate
+        - endDate
+
+    ChangeDetectionResult:
+      type: object
+      properties:
+        jobId:
+          type: string
+        source:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        changedAreaKm2:
+          type: number
+          description: Total area of detected urban change in km²
+        changePercent:
+          type: number
+          description: Percentage of analyzed area that changed
+        method:
+          type: string
+          description: Detection method used (e.g. NDBI_diff, SAR_backscatter)
+        geoJson:
+          $ref: "#/components/schemas/GeoJsonFeatureCollection"
+        baselineSceneIds:
+          type: array
+          items:
+            type: integer
+        analysisSceneIds:
+          type: array
+          items:
+            type: integer
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChangeEvent"
+      required:
+        - jobId
+        - source
+        - startDate
+        - endDate
+        - changedAreaKm2
+        - changePercent
+        - method
+        - geoJson
+        - baselineSceneIds
+        - analysisSceneIds
+        - events
+
+    GeoJsonFeatureCollection:
+      type: object
+      properties:
+        type:
+          type: string
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeoJsonFeature"
+      required:
+        - type
+        - features
+
+    GeoJsonFeature:
+      type: object
+      properties:
+        type:
+          type: string
+        geometry:
+          type: object
+          additionalProperties: true
+        properties:
+          type: object
+          additionalProperties: true
+      required:
+        - type
+        - geometry
+        - properties
+
+    UrbanStatPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        urbanAreaKm2:
+          type: number
+        vegetationAreaKm2:
+          type: number
+        waterAreaKm2:
+          type: number
+        bareLandAreaKm2:
+          type: number
+        growthRatePercent:
+          type: ["number", "null"]
+          description: Percentage growth from previous period
+      required:
+        - date
+        - urbanAreaKm2
+        - vegetationAreaKm2
+        - waterAreaKm2
+        - bareLandAreaKm2
+        - growthRatePercent
+
+    UrbanStatsResponse:
+      type: object
+      properties:
+        aoiId:
+          type: ["integer", "null"]
+        granularity:
+          type: string
+        timeSeries:
+          type: array
+          items:
+            $ref: "#/components/schemas/UrbanStatPoint"
+      required:
+        - aoiId
+        - granularity
+        - timeSeries
+
+    AnalysisSummary:
+      type: object
+      properties:
+        totalUrbanAreaKm2:
+          type: number
+        totalAreaKm2:
+          type: number
+        urbanCoveragePercent:
+          type: number
+        annualGrowthRatePercent:
+          type: number
+        recentGrowthKm2:
+          type: number
+          description: Urban area gained in the last 30 days
+        activeRegionsCount:
+          type: integer
+        lastUpdated:
+          type: string
+        landUseSummary:
+          $ref: "#/components/schemas/LandUseSummary"
+        topGrowthRegions:
+          type: array
+          items:
+            $ref: "#/components/schemas/GrowthRegion"
+      required:
+        - totalUrbanAreaKm2
+        - totalAreaKm2
+        - urbanCoveragePercent
+        - annualGrowthRatePercent
+        - recentGrowthKm2
+        - activeRegionsCount
+        - lastUpdated
+        - landUseSummary
+        - topGrowthRegions
+
+    LandUseSummary:
+      type: object
+      properties:
+        urbanPercent:
+          type: number
+        vegetationPercent:
+          type: number
+        waterPercent:
+          type: number
+        bareLandPercent:
+          type: number
+      required:
+        - urbanPercent
+        - vegetationPercent
+        - waterPercent
+        - bareLandPercent
+
+    GrowthRegion:
+      type: object
+      properties:
+        name:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        growthKm2:
+          type: number
+        growthPercent:
+          type: number
+      required:
+        - name
+        - lat
+        - lon
+        - growthKm2
+        - growthPercent
+
+    ChangeEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        location:
+          type: string
+          description: Human-readable location name
+        lat:
+          type: number
+        lon:
+          type: number
+        source:
+          type: string
+          enum: [sentinel1, landsat]
+        eventDate:
+          type: string
+          description: ISO 8601 date when the change was detected
+        magnitude:
+          type: number
+          description: Change magnitude from 0.0 (minimal) to 1.0 (high)
+        changeType:
+          type: string
+          enum: [urban_expansion, construction, land_clearing, infrastructure]
+        areaKm2:
+          type: number
+          description: Area of the detected change in km²
+        description:
+          type: string
+        thumbnailUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - location
+        - lat
+        - lon
+        - source
+        - eventDate
+        - magnitude
+        - changeType
+        - areaKm2
+        - description
+        - thumbnailUrl
+        - createdAt
+
+    FeedSummary:
+      type: object
+      properties:
+        totalEventsToday:
+          type: integer
+        totalEventsThisWeek:
+          type: integer
+        activeRegionsCount:
+          type: integer
+        sentinel1EventsCount:
+          type: integer
+        landsatEventsCount:
+          type: integer
+        lastEventAt:
+          type: ["string", "null"]
+      required:
+        - totalEventsToday
+        - totalEventsThisWeek
+        - activeRegionsCount
+        - sentinel1EventsCount
+        - landsatEventsCount
+        - lastEventAt
