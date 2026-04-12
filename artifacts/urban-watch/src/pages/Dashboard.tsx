@@ -5,8 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Map, Activity, Trees, Droplet, MountainSnow } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: summary, isLoading: loadingSummary } = useGetAnalysisSummary({});
-  const { data: stats, isLoading: loadingStats } = useGetUrbanStats({ query: { granularity: "monthly" } });
+  const { data: summary, isLoading: loadingSummary } = useGetAnalysisSummary();
+  const { data: stats, isLoading: loadingStats } = useGetUrbanStats({ granularity: "monthly" });
 
   const landUseData = summary ? [
     { name: "Urban", value: summary.landUseSummary.urbanPercent, color: "hsl(var(--primary))" },

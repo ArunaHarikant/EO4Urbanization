@@ -12,8 +12,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  const { data: events } = useListChangeEvents({ query: { refetchInterval: 30000 } });
-  const { data: feedSummary } = useGetFeedSummary({ query: { refetchInterval: 30000 } });
+  const { data: events } = useListChangeEvents(undefined, { query: { refetchInterval: 30000, queryKey: [] } });
+  const { data: feedSummary } = useGetFeedSummary({ query: { refetchInterval: 30000, queryKey: [] } });
   const createAoi = useCreateAoi();
   const queryClient = useQueryClient();
   const { toast } = useToast();

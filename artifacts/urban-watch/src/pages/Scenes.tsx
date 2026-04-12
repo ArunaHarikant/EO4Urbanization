@@ -11,11 +11,9 @@ import { Button } from "@/components/ui/button";
 
 export default function Scenes() {
   const [source, setSource] = useState<string>("all");
-  const { data: scenes, isLoading } = useListScenes({
-    query: {
-      ...(source !== "all" ? { source } : {})
-    }
-  });
+  const { data: scenes, isLoading } = useListScenes(
+    source !== "all" ? { source: source as "sentinel1" | "landsat" } : undefined
+  );
 
   return (
     <div className="p-8 space-y-6 h-full overflow-y-auto">

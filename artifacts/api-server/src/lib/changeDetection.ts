@@ -106,7 +106,7 @@ export function runChangeDetection(params: ChangeDetectionParams): {
     const changeType = changeTypes[Math.floor(Math.random() * changeTypes.length)];
     const patchSource: "sentinel1" | "landsat" = source === "both"
       ? (Math.random() > 0.5 ? "sentinel1" : "landsat")
-      : (source === "both" ? "sentinel1" : source);
+      : source;
 
     const geometry = generateChangePolygon(centerLat, centerLon, radiusDeg);
 
