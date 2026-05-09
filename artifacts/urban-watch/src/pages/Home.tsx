@@ -1,16 +1,15 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { MapContainer, TileLayer, FeatureGroup, Rectangle, Popup } from "react-leaflet";
-import { EditControl } from "react-leaflet-draw";
-import "leaflet-draw/dist/leaflet.draw.css";
-import L, { type DrawEvents } from "leaflet";
+import L from "leaflet";
 import { useListChangeEvents, useGetFeedSummary, useCreateAoi, getListAoisQueryKey, getListChangeEventsQueryKey, getGetFeedSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Satellite, Building, Trees, HardHat, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import DrawControl from "@/components/map/DrawControl";
 
 export default function Home() {
   const { data: events } = useListChangeEvents(undefined, { query: { refetchInterval: 30000, queryKey: getListChangeEventsQueryKey() } });
@@ -19,28 +18,24 @@ export default function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const handleCreated = (e: DrawEvents.Created) => {
-    const layer = e.layer;
-    const bounds = (layer as L.Rectangle).getBounds();
+  const handleRectangleCreated = (bounds: L.LatLngBounds) => {
     const minLat = bounds.getSouthWest().lat;
     const minLon = bounds.getSouthWest().lng;
     const maxLat = bounds.getNorthEast().lat;
     const maxLon = bounds.getNorthEast().lng;
 
-    createAoi.mutate({
-      data: {
-        name: `New Region ${new Date().toISOString()}`,
-        minLat, maxLat, minLon, maxLon
+    createAoi.mutate(
+      { data: { name: `New Region ${new Date().toISOString()}`, minLat, maxLat, minLon, maxLon } },
+      {
+        onSuccess: () => {
+          toast({ title: "AOI Created", description: "Successfully saved new Area of Interest." });
+          queryClient.invalidateQueries({ queryKey: getListAoisQueryKey() });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Failed to save AOI.", variant: "destructive" });
+        },
       }
-    }, {
-      onSuccess: () => {
-        toast({ title: "AOI Created", description: "Successfully saved new Area of Interest." });
-        queryClient.invalidateQueries({ queryKey: getListAoisQueryKey() });
-      },
-      onError: () => {
-        toast({ title: "Error", description: "Failed to save AOI.", variant: "destructive" });
-      }
-    });
+    );
   };
 
   const getEventIcon = (type: string) => {
@@ -67,19 +62,8 @@ export default function Home() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             className="map-tiles"
           />
+          <DrawControl onRectangleCreated={handleRectangleCreated} />
           <FeatureGroup>
-            <EditControl
-              position="topright"
-              onCreated={handleCreated}
-              draw={{
-                rectangle: { showArea: false },
-                polygon: false,
-                circle: false,
-                circlemarker: false,
-                marker: false,
-                polyline: false,
-              }}
-            />
             {events?.map((event) => (
               <Rectangle
                 key={event.id}
@@ -88,9 +72,9 @@ export default function Home() {
               >
                 <Popup>
                   <div className="text-sm">
-                    <strong>{event.location}</strong><br/>
-                    Type: {event.changeType}<br/>
-                    Magnitude: {event.magnitude}<br/>
+                    <strong>{event.location}</strong><br />
+                    Type: {event.changeType}<br />
+                    Magnitude: {event.magnitude}<br />
                     Source: {event.source}
                   </div>
                 </Popup>
@@ -98,7 +82,7 @@ export default function Home() {
             ))}
           </FeatureGroup>
         </MapContainer>
-        
+
         {/* Overlay Stats */}
         <div className="absolute top-4 left-4 z-[1000] flex gap-2">
           <Card className="bg-card/90 backdrop-blur-sm border-border shadow-lg">
@@ -147,8 +131,8 @@ export default function Home() {
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-2 flex-1">
                     <div className="h-1.5 w-full bg-background rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-chart-5" 
+                      <div
+                        className="h-full bg-chart-5"
                         style={{ width: `${event.magnitude * 100}%` }}
                       />
                     </div>
