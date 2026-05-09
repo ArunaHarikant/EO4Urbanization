@@ -28,9 +28,14 @@ import type {
   GetAnalysisSummaryParams,
   GetUrbanStatsParams,
   HealthStatus,
+  InformalSettlement,
+  InformalityImpactStats,
   ListChangeEventsParams,
+  ListInformalSettlementsParams,
   ListScenesParams,
   SatelliteScene,
+  ScanSettlementsBody,
+  ScanSettlementsResult,
   UrbanStatsResponse,
 } from "./api.schemas";
 
@@ -1057,6 +1062,277 @@ export function useGetFeedSummary<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetFeedSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Returns informal settlements detected via multi-modal satellite analysis
+ * @summary List detected informal settlements
+ */
+export const getListInformalSettlementsUrl = (
+  params?: ListInformalSettlementsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/informality/settlements?${stringifiedParams}`
+    : `/api/informality/settlements`;
+};
+
+export const listInformalSettlements = async (
+  params?: ListInformalSettlementsParams,
+  options?: RequestInit,
+): Promise<InformalSettlement[]> => {
+  return customFetch<InformalSettlement[]>(
+    getListInformalSettlementsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListInformalSettlementsQueryKey = (
+  params?: ListInformalSettlementsParams,
+) => {
+  return [`/api/informality/settlements`, ...(params ? [params] : [])] as const;
+};
+
+export const getListInformalSettlementsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listInformalSettlements>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListInformalSettlementsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listInformalSettlements>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListInformalSettlementsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listInformalSettlements>>
+  > = ({ signal }) =>
+    listInformalSettlements(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listInformalSettlements>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListInformalSettlementsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listInformalSettlements>>
+>;
+export type ListInformalSettlementsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List detected informal settlements
+ */
+
+export function useListInformalSettlements<
+  TData = Awaited<ReturnType<typeof listInformalSettlements>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListInformalSettlementsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listInformalSettlements>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListInformalSettlementsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Run AI-powered multi-modal (SAR + optical) scan to detect informal settlements in a bounding box
+ * @summary Scan an area for informal settlements
+ */
+export const getScanForInformalSettlementsUrl = () => {
+  return `/api/informality/scan`;
+};
+
+export const scanForInformalSettlements = async (
+  scanSettlementsBody: ScanSettlementsBody,
+  options?: RequestInit,
+): Promise<ScanSettlementsResult> => {
+  return customFetch<ScanSettlementsResult>(
+    getScanForInformalSettlementsUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(scanSettlementsBody),
+    },
+  );
+};
+
+export const getScanForInformalSettlementsMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scanForInformalSettlements>>,
+    TError,
+    { data: BodyType<ScanSettlementsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof scanForInformalSettlements>>,
+  TError,
+  { data: BodyType<ScanSettlementsBody> },
+  TContext
+> => {
+  const mutationKey = ["scanForInformalSettlements"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof scanForInformalSettlements>>,
+    { data: BodyType<ScanSettlementsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return scanForInformalSettlements(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ScanForInformalSettlementsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof scanForInformalSettlements>>
+>;
+export type ScanForInformalSettlementsMutationBody =
+  BodyType<ScanSettlementsBody>;
+export type ScanForInformalSettlementsMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Scan an area for informal settlements
+ */
+export const useScanForInformalSettlements = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scanForInformalSettlements>>,
+    TError,
+    { data: BodyType<ScanSettlementsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof scanForInformalSettlements>>,
+  TError,
+  { data: BodyType<ScanSettlementsBody> },
+  TContext
+> => {
+  return useMutation(getScanForInformalSettlementsMutationOptions(options));
+};
+
+/**
+ * Returns global statistics about the scale and impact of the informal settlement invisibility gap
+ * @summary Get global invisibility gap impact statistics
+ */
+export const getGetInformalityImpactUrl = () => {
+  return `/api/informality/impact`;
+};
+
+export const getInformalityImpact = async (
+  options?: RequestInit,
+): Promise<InformalityImpactStats> => {
+  return customFetch<InformalityImpactStats>(getGetInformalityImpactUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetInformalityImpactQueryKey = () => {
+  return [`/api/informality/impact`] as const;
+};
+
+export const getGetInformalityImpactQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInformalityImpact>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getInformalityImpact>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetInformalityImpactQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getInformalityImpact>>
+  > = ({ signal }) => getInformalityImpact({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInformalityImpact>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetInformalityImpactQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInformalityImpact>>
+>;
+export type GetInformalityImpactQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get global invisibility gap impact statistics
+ */
+
+export function useGetInformalityImpact<
+  TData = Awaited<ReturnType<typeof getInformalityImpact>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getInformalityImpact>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetInformalityImpactQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

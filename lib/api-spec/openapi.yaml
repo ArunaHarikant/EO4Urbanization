@@ -350,6 +350,90 @@ paths:
               schema:
                 $ref: "#/components/schemas/FeedSummary"
 
+  /informality/settlements:
+    get:
+      operationId: listInformalSettlements
+      tags: [informality]
+      summary: List detected informal settlements
+      description: Returns informal settlements detected via multi-modal satellite analysis
+      parameters:
+        - name: riskLevel
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, moderate, low, all]
+            default: all
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: minLat
+          in: query
+          schema:
+            type: number
+        - name: maxLat
+          in: query
+          schema:
+            type: number
+        - name: minLon
+          in: query
+          schema:
+            type: number
+        - name: maxLon
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of informal settlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InformalSettlement"
+
+  /informality/scan:
+    post:
+      operationId: scanForInformalSettlements
+      tags: [informality]
+      summary: Scan an area for informal settlements
+      description: Run AI-powered multi-modal (SAR + optical) scan to detect informal settlements in a bounding box
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanSettlementsBody"
+      responses:
+        "200":
+          description: Scan results with detected settlements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanSettlementsResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /informality/impact:
+    get:
+      operationId: getInformalityImpact
+      tags: [informality]
+      summary: Get global invisibility gap impact statistics
+      description: Returns global statistics about the scale and impact of the informal settlement invisibility gap
+      responses:
+        "200":
+          description: Global impact statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InformalityImpactStats"
+
 components:
   schemas:
     HealthStatus:
@@ -761,3 +845,172 @@ components:
         - sentinel1EventsCount
         - landsatEventsCount
         - lastEventAt
+
+    InformalSettlement:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        country:
+          type: string
+        city:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        minLat:
+          type: number
+        maxLat:
+          type: number
+        minLon:
+          type: number
+        maxLon:
+          type: number
+        areaKm2:
+          type: number
+        estimatedPopulation:
+          type: integer
+        riskLevel:
+          type: string
+          enum: [critical, high, moderate, low]
+        floodRisk:
+          type: number
+          description: Flood risk score 0.0-1.0
+        heatRisk:
+          type: number
+          description: Heat island risk score 0.0-1.0
+        buildingHeightM:
+          type: ["number", "null"]
+          description: Average building height from SAR 3D morphology analysis
+        densityPercent:
+          type: ["number", "null"]
+          description: Building coverage density percentage
+        detectionMethod:
+          type: string
+          enum: [SAR, optical, multi-modal]
+        detectedAt:
+          type: string
+        lastUpdated:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - country
+        - city
+        - lat
+        - lon
+        - minLat
+        - maxLat
+        - minLon
+        - maxLon
+        - areaKm2
+        - estimatedPopulation
+        - riskLevel
+        - floodRisk
+        - heatRisk
+        - buildingHeightM
+        - densityPercent
+        - detectionMethod
+        - detectedAt
+        - lastUpdated
+        - createdAt
+
+    ScanSettlementsBody:
+      type: object
+      properties:
+        minLat:
+          type: number
+        maxLat:
+          type: number
+        minLon:
+          type: number
+        maxLon:
+          type: number
+        source:
+          type: string
+          enum: [SAR, optical, multi-modal]
+          default: multi-modal
+      required:
+        - minLat
+        - maxLat
+        - minLon
+        - maxLon
+
+    ScanSettlementsResult:
+      type: object
+      properties:
+        jobId:
+          type: string
+        scannedAreaKm2:
+          type: number
+        settlementsFound:
+          type: integer
+        totalPopulationEstimate:
+          type: integer
+        source:
+          type: string
+        geoJson:
+          $ref: "#/components/schemas/GeoJsonFeatureCollection"
+        settlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/InformalSettlement"
+      required:
+        - jobId
+        - scannedAreaKm2
+        - settlementsFound
+        - totalPopulationEstimate
+        - source
+        - geoJson
+        - settlements
+
+    InformalityImpactStats:
+      type: object
+      properties:
+        globalPopulationAffected:
+          type: integer
+          description: Estimated number of people living in unmapped informal settlements
+        countriesAffected:
+          type: integer
+        settlementsMonitored:
+          type: integer
+        gdpImpactPercent:
+          type: number
+          description: Potential GDP increase if settlements were upgraded (%)
+        lifeExpectancyGainYears:
+          type: number
+          description: Average life expectancy increase if upgraded (years)
+        livesSavedAnnually:
+          type: integer
+          description: Estimated lives saved annually through improved conditions
+        childrenInSchool:
+          type: integer
+          description: Additional children enrolled in school globally
+        criticalRiskCount:
+          type: integer
+        highRiskCount:
+          type: integer
+        moderateRiskCount:
+          type: integer
+        lowRiskCount:
+          type: integer
+        lastUpdated:
+          type: string
+      required:
+        - globalPopulationAffected
+        - countriesAffected
+        - settlementsMonitored
+        - gdpImpactPercent
+        - lifeExpectancyGainYears
+        - livesSavedAnnually
+        - childrenInSchool
+        - criticalRiskCount
+        - highRiskCount
+        - moderateRiskCount
+        - lowRiskCount
+        - lastUpdated

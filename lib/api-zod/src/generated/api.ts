@@ -364,3 +364,150 @@ export const GetFeedSummaryResponse = zod.object({
   landsatEventsCount: zod.number(),
   lastEventAt: zod.string().nullable(),
 });
+
+/**
+ * Returns informal settlements detected via multi-modal satellite analysis
+ * @summary List detected informal settlements
+ */
+export const listInformalSettlementsQueryRiskLevelDefault = `all`;
+export const listInformalSettlementsQueryLimitDefault = 50;
+
+export const ListInformalSettlementsQueryParams = zod.object({
+  riskLevel: zod
+    .enum(["critical", "high", "moderate", "low", "all"])
+    .default(listInformalSettlementsQueryRiskLevelDefault),
+  limit: zod.coerce.number().default(listInformalSettlementsQueryLimitDefault),
+  minLat: zod.coerce.number().optional(),
+  maxLat: zod.coerce.number().optional(),
+  minLon: zod.coerce.number().optional(),
+  maxLon: zod.coerce.number().optional(),
+});
+
+export const ListInformalSettlementsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  country: zod.string(),
+  city: zod.string(),
+  lat: zod.number(),
+  lon: zod.number(),
+  minLat: zod.number(),
+  maxLat: zod.number(),
+  minLon: zod.number(),
+  maxLon: zod.number(),
+  areaKm2: zod.number(),
+  estimatedPopulation: zod.number(),
+  riskLevel: zod.enum(["critical", "high", "moderate", "low"]),
+  floodRisk: zod.number().describe("Flood risk score 0.0-1.0"),
+  heatRisk: zod.number().describe("Heat island risk score 0.0-1.0"),
+  buildingHeightM: zod
+    .number()
+    .nullable()
+    .describe("Average building height from SAR 3D morphology analysis"),
+  densityPercent: zod
+    .number()
+    .nullable()
+    .describe("Building coverage density percentage"),
+  detectionMethod: zod.enum(["SAR", "optical", "multi-modal"]),
+  detectedAt: zod.string(),
+  lastUpdated: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListInformalSettlementsResponse = zod.array(
+  ListInformalSettlementsResponseItem,
+);
+
+/**
+ * Run AI-powered multi-modal (SAR + optical) scan to detect informal settlements in a bounding box
+ * @summary Scan an area for informal settlements
+ */
+export const scanForInformalSettlementsBodySourceDefault = `multi-modal`;
+
+export const ScanForInformalSettlementsBody = zod.object({
+  minLat: zod.number(),
+  maxLat: zod.number(),
+  minLon: zod.number(),
+  maxLon: zod.number(),
+  source: zod
+    .enum(["SAR", "optical", "multi-modal"])
+    .default(scanForInformalSettlementsBodySourceDefault),
+});
+
+export const ScanForInformalSettlementsResponse = zod.object({
+  jobId: zod.string(),
+  scannedAreaKm2: zod.number(),
+  settlementsFound: zod.number(),
+  totalPopulationEstimate: zod.number(),
+  source: zod.string(),
+  geoJson: zod.object({
+    type: zod.string(),
+    features: zod.array(
+      zod.object({
+        type: zod.string(),
+        geometry: zod.record(zod.string(), zod.unknown()),
+        properties: zod.record(zod.string(), zod.unknown()),
+      }),
+    ),
+  }),
+  settlements: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      country: zod.string(),
+      city: zod.string(),
+      lat: zod.number(),
+      lon: zod.number(),
+      minLat: zod.number(),
+      maxLat: zod.number(),
+      minLon: zod.number(),
+      maxLon: zod.number(),
+      areaKm2: zod.number(),
+      estimatedPopulation: zod.number(),
+      riskLevel: zod.enum(["critical", "high", "moderate", "low"]),
+      floodRisk: zod.number().describe("Flood risk score 0.0-1.0"),
+      heatRisk: zod.number().describe("Heat island risk score 0.0-1.0"),
+      buildingHeightM: zod
+        .number()
+        .nullable()
+        .describe("Average building height from SAR 3D morphology analysis"),
+      densityPercent: zod
+        .number()
+        .nullable()
+        .describe("Building coverage density percentage"),
+      detectionMethod: zod.enum(["SAR", "optical", "multi-modal"]),
+      detectedAt: zod.string(),
+      lastUpdated: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * Returns global statistics about the scale and impact of the informal settlement invisibility gap
+ * @summary Get global invisibility gap impact statistics
+ */
+export const GetInformalityImpactResponse = zod.object({
+  globalPopulationAffected: zod
+    .number()
+    .describe(
+      "Estimated number of people living in unmapped informal settlements",
+    ),
+  countriesAffected: zod.number(),
+  settlementsMonitored: zod.number(),
+  gdpImpactPercent: zod
+    .number()
+    .describe("Potential GDP increase if settlements were upgraded (%)"),
+  lifeExpectancyGainYears: zod
+    .number()
+    .describe("Average life expectancy increase if upgraded (years)"),
+  livesSavedAnnually: zod
+    .number()
+    .describe("Estimated lives saved annually through improved conditions"),
+  childrenInSchool: zod
+    .number()
+    .describe("Additional children enrolled in school globally"),
+  criticalRiskCount: zod.number(),
+  highRiskCount: zod.number(),
+  moderateRiskCount: zod.number(),
+  lowRiskCount: zod.number(),
+  lastUpdated: zod.string(),
+});

@@ -4,6 +4,7 @@ import scenesRouter from "./scenes";
 import aoiRouter from "./aoi";
 import analysisRouter from "./analysis";
 import feedRouter from "./feed";
+import informalityRouter from "./informality";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(scenesRouter);
 router.use(aoiRouter);
 router.use(analysisRouter);
 router.use(feedRouter);
+router.use(informalityRouter);
 
 export default router;

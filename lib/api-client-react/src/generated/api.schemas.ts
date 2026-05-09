@@ -222,6 +222,106 @@ export interface FeedSummary {
   lastEventAt: string | null;
 }
 
+export type InformalSettlementRiskLevel =
+  (typeof InformalSettlementRiskLevel)[keyof typeof InformalSettlementRiskLevel];
+
+export const InformalSettlementRiskLevel = {
+  critical: "critical",
+  high: "high",
+  moderate: "moderate",
+  low: "low",
+} as const;
+
+export type InformalSettlementDetectionMethod =
+  (typeof InformalSettlementDetectionMethod)[keyof typeof InformalSettlementDetectionMethod];
+
+export const InformalSettlementDetectionMethod = {
+  SAR: "SAR",
+  optical: "optical",
+  "multi-modal": "multi-modal",
+} as const;
+
+export interface InformalSettlement {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  lat: number;
+  lon: number;
+  minLat: number;
+  maxLat: number;
+  minLon: number;
+  maxLon: number;
+  areaKm2: number;
+  estimatedPopulation: number;
+  riskLevel: InformalSettlementRiskLevel;
+  /** Flood risk score 0.0-1.0 */
+  floodRisk: number;
+  /** Heat island risk score 0.0-1.0 */
+  heatRisk: number;
+  /**
+   * Average building height from SAR 3D morphology analysis
+   * @nullable
+   */
+  buildingHeightM: number | null;
+  /**
+   * Building coverage density percentage
+   * @nullable
+   */
+  densityPercent: number | null;
+  detectionMethod: InformalSettlementDetectionMethod;
+  detectedAt: string;
+  lastUpdated: string;
+  createdAt: string;
+}
+
+export type ScanSettlementsBodySource =
+  (typeof ScanSettlementsBodySource)[keyof typeof ScanSettlementsBodySource];
+
+export const ScanSettlementsBodySource = {
+  SAR: "SAR",
+  optical: "optical",
+  "multi-modal": "multi-modal",
+} as const;
+
+export interface ScanSettlementsBody {
+  minLat: number;
+  maxLat: number;
+  minLon: number;
+  maxLon: number;
+  source?: ScanSettlementsBodySource;
+}
+
+export interface ScanSettlementsResult {
+  jobId: string;
+  scannedAreaKm2: number;
+  settlementsFound: number;
+  totalPopulationEstimate: number;
+  source: string;
+  geoJson: GeoJsonFeatureCollection;
+  settlements: InformalSettlement[];
+}
+
+export interface InformalityImpactStats {
+  /** Estimated number of people living in unmapped informal settlements */
+  globalPopulationAffected: number;
+  countriesAffected: number;
+  settlementsMonitored: number;
+  /** Potential GDP increase if settlements were upgraded (%) */
+  gdpImpactPercent: number;
+  /** Average life expectancy increase if upgraded (years) */
+  lifeExpectancyGainYears: number;
+  /** Estimated lives saved annually through improved conditions */
+  livesSavedAnnually: number;
+  /** Additional children enrolled in school globally */
+  childrenInSchool: number;
+  criticalRiskCount: number;
+  highRiskCount: number;
+  moderateRiskCount: number;
+  lowRiskCount: number;
+  lastUpdated: string;
+}
+
 export type ListScenesParams = {
   /**
    * Satellite data source
@@ -316,5 +416,25 @@ export type ListChangeEventsSource =
 export const ListChangeEventsSource = {
   sentinel1: "sentinel1",
   landsat: "landsat",
+  all: "all",
+} as const;
+
+export type ListInformalSettlementsParams = {
+  riskLevel?: ListInformalSettlementsRiskLevel;
+  limit?: number;
+  minLat?: number;
+  maxLat?: number;
+  minLon?: number;
+  maxLon?: number;
+};
+
+export type ListInformalSettlementsRiskLevel =
+  (typeof ListInformalSettlementsRiskLevel)[keyof typeof ListInformalSettlementsRiskLevel];
+
+export const ListInformalSettlementsRiskLevel = {
+  critical: "critical",
+  high: "high",
+  moderate: "moderate",
+  low: "low",
   all: "all",
 } as const;

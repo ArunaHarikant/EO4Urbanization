@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Scenes from "@/pages/Scenes";
 import Analysis from "@/pages/Analysis";
 import Regions from "@/pages/Regions";
+import InformalityMap from "@/pages/InformalityMap";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ function Router() {
         <Route path="/scenes" component={Scenes} />
         <Route path="/analysis" component={Analysis} />
         <Route path="/regions" component={Regions} />
+        <Route path="/informality" component={InformalityMap} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

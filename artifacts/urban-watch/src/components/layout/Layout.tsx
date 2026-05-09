@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Map, LayoutDashboard, Image as ImageIcon, Activity, Globe, ActivitySquare } from "lucide-react";
+import { Map, LayoutDashboard, Image as ImageIcon, Activity, Globe, ActivitySquare, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -16,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
     { href: "/scenes", label: "Scenes Browser", icon: ImageIcon },
     { href: "/analysis", label: "Analysis Tool", icon: Activity },
     { href: "/regions", label: "Regions (AOIs)", icon: Globe },
+    { href: "/informality", label: "Informality Map", icon: Building2 },
   ];
 
   return (
