@@ -69,6 +69,30 @@ export default function Home() {
     setAnalysisResult(null);
     setFitToBounds(true);
     setTimeout(() => setFitToBounds(false), 500);
+
+    // Auto-run analysis immediately when area is drawn
+    detectChanges.mutate(
+      {
+        data: {
+          minLat: area.minLat,
+          maxLat: area.maxLat,
+          minLon: area.minLon,
+          maxLon: area.maxLon,
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          source,
+        },
+      },
+      {
+        onSuccess: (result) => {
+          setAnalysisResult(result);
+          toast({ title: "Analysis Complete", description: `${result.events.length} change events detected across ${result.changedAreaKm2.toFixed(2)} km².` });
+        },
+        onError: () => {
+          toast({ title: "Analysis Failed", description: "An error occurred during processing.", variant: "destructive" });
+        },
+      }
+    );
   };
 
   const handleRunAnalysis = () => {
@@ -291,11 +315,12 @@ export default function Home() {
                     <Button
                       onClick={handleRunAnalysis}
                       disabled={detectChanges.isPending}
+                      variant="outline"
                       className="flex-1 h-9 text-xs uppercase tracking-wider font-bold"
                     >
                       {detectChanges.isPending
-                        ? <><Loader2 className="mr-2 h-3 w-3 animate-spin" />Processing...</>
-                        : <><Play className="mr-2 h-3 w-3" />Run Change Detection</>}
+                        ? <><Loader2 className="mr-2 h-3 w-3 animate-spin" />Running...</>
+                        : <><Play className="mr-2 h-3 w-3" />Re-run</>}
                     </Button>
                     <Button
                       onClick={handleSaveAoi}
