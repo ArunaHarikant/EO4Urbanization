@@ -1,0 +1,42 @@
+services:
+  # 1. The PostgreSQL Database
+  - name: sentinel-db
+    type: pserv
+    plan: free
+    postgres:
+      version: "15"
+
+  # 2. The Backend API Server
+  - name: sentinel-api
+    type: web
+    plan: free
+    env: node
+    repo: https://github.com/ArunaHarikant/EO4Urbanization.git
+    rootDir: ./artifacts/api-server
+    buildCommand: "pnpm install && pnpm run build"
+    startCommand: "pnpm run start"
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: sentinel-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+
+  # 3. The Frontend React App
+  - name: sentinel-webapp
+    type: web
+    plan: free
+    env: static
+    repo: https://github.com/ArunaHarikant/EO4Urbanization.git
+    rootDir: ./artifacts/urban-watch
+    buildCommand: "pnpm install && pnpm run build"
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+      - type: rewrite
+        source: /api/*
+        destination: https://sentinel-api.onrender.com/api/*

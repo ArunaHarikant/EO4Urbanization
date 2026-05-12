@@ -48,7 +48,7 @@ export default function Scenes() {
               </CardContent>
             </Card>
           ))
-        ) : scenes?.map((scene) => (
+        ) : Array.isArray(scenes) && scenes.map((scene) => (
           <Dialog key={scene.id}>
             <DialogTrigger asChild>
               <Card className="bg-card cursor-pointer hover-elevate overflow-hidden border-border group transition-all duration-200 hover:border-primary/50">

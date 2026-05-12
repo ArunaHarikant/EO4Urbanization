@@ -259,7 +259,7 @@ export default function Regions() {
     );
   };
 
-  const analysisAoi = aois?.find((a) => a.id === analysisAoiId) ?? null;
+  const analysisAoi = Array.isArray(aois) ? aois.find((a) => a.id === analysisAoiId) ?? null : null;
 
   return (
     <div className="p-8 h-full overflow-y-auto space-y-8">
@@ -290,7 +290,7 @@ export default function Regions() {
             </Card>
           ))}
         </div>
-      ) : aois && aois.length > 0 ? (
+      ) : Array.isArray(aois) && aois.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {aois.map((aoi) => (
             <Card

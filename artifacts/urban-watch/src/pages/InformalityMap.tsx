@@ -35,7 +35,8 @@ function FitBounds({ bounds }: { bounds: LatLngBoundsExpression | null }) {
   return null;
 }
 
-function formatNumber(n: number): string {
+function formatNumber(n: number | undefined | null): string {
+  if (n == null || isNaN(n)) return "0";
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
@@ -90,7 +91,7 @@ export default function InformalityMap() {
     );
   };
 
-  const displaySettlements = settlements ?? [];
+  const displaySettlements = Array.isArray(settlements) ? settlements : [];
   const mapCenter: [number, number] = displaySettlements.length > 0
     ? [displaySettlements[0].lat, displaySettlements[0].lon]
     : [0, 20];
@@ -339,7 +340,7 @@ export default function InformalityMap() {
                   <div className="text-sm font-bold">{s.name}</div>
                   <div className="text-xs text-gray-600">{s.city}, {s.country}</div>
                   <div className="mt-1 text-xs space-y-0.5">
-                    <div>Population: <strong>{s.estimatedPopulation.toLocaleString()}</strong></div>
+                    <div>Population: <strong>{formatNumber(s.estimatedPopulation)}</strong></div>
                     <div>Area: <strong>{s.areaKm2.toFixed(2)} km²</strong></div>
                     <div>Risk: <strong style={{ color: RISK_COLORS[s.riskLevel] }}>{s.riskLevel.toUpperCase()}</strong></div>
                     <div>Method: <strong>{s.detectionMethod}</strong></div>
@@ -389,7 +390,7 @@ function SettlementDialog({ settlement }: { settlement: InformalSettlement }) {
       <div className="space-y-4 mt-2">
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-muted rounded-md p-3 text-center">
-            <div className="text-xl font-bold">{settlement.estimatedPopulation.toLocaleString()}</div>
+            <div className="text-xl font-bold">{formatNumber(settlement.estimatedPopulation)}</div>
             <div className="text-[10px] text-muted-foreground uppercase mt-1">Est. Population</div>
           </div>
           <div className="bg-muted rounded-md p-3 text-center">

@@ -1,14 +1,18 @@
-import { useGetAnalysisSummary, useGetUrbanStats } from "@workspace/api-client-react";
+import { useState } from "react";
+import { useGetAnalysisSummary, useGetUrbanStats, useListAois } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Map, Activity, Trees, Droplet, MountainSnow } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Dashboard() {
-  const { data: summary, isLoading: loadingSummary } = useGetAnalysisSummary();
-  const { data: stats, isLoading: loadingStats } = useGetUrbanStats({ granularity: "monthly" });
+  const [selectedAoiId, setSelectedAoiId] = useState<number | null>(null);
+  const { data: aois } = useListAois();
+  const { data: summary, isLoading: loadingSummary } = useGetAnalysisSummary(selectedAoiId ? { aoiId: selectedAoiId } : {});
+  const { data: stats, isLoading: loadingStats } = useGetUrbanStats({ granularity: "monthly", aoiId: selectedAoiId ?? undefined });
 
-  const landUseData = summary ? [
+  const landUseData = summary?.landUseSummary ? [
     { name: "Urban", value: summary.landUseSummary.urbanPercent, color: "hsl(var(--primary))" },
     { name: "Vegetation", value: summary.landUseSummary.vegetationPercent, color: "hsl(var(--chart-3))" },
     { name: "Water", value: summary.landUseSummary.waterPercent, color: "hsl(var(--chart-2))" },
@@ -17,9 +21,30 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 space-y-8 overflow-y-auto h-full">
-      <div>
-        <h1 className="text-3xl font-bold uppercase tracking-tight">Urban Growth Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Global metrics and analysis overview.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold uppercase tracking-tight">Urban Growth Dashboard</h1>
+          <p className="text-muted-foreground mt-2">Metrics and analysis overview.</p>
+        </div>
+        
+        <div className="w-full md:w-64">
+          <Select 
+            value={selectedAoiId ? selectedAoiId.toString() : "global"} 
+            onValueChange={(val) => setSelectedAoiId(val === "global" ? null : parseInt(val))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="global">Global (All Regions)</SelectItem>
+              {aois?.map((aoi) => (
+                <SelectItem key={aoi.id} value={aoi.id.toString()}>
+                  {aoi.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Stats row */}

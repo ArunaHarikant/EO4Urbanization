@@ -160,7 +160,7 @@ export default function Home() {
   };
 
   const recentEvents = useMemo(() => {
-    if (!events) return [];
+    if (!Array.isArray(events)) return [];
     return [...events]
       .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
       .slice(0, 20);
@@ -203,7 +203,7 @@ export default function Home() {
           )}
 
           <FeatureGroup>
-            {events?.map((event) => (
+            {Array.isArray(events) && events.map((event) => (
               <Rectangle
                 key={event.id}
                 bounds={[[event.lat - 0.01, event.lon - 0.01], [event.lat + 0.01, event.lon + 0.01]]}
