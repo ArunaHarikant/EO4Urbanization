@@ -30,10 +30,10 @@ services:
     rootDir: ./artifacts/urban-watch
     buildCommand: "pnpm install && pnpm run build"
     staticPublishPath: dist/public
-    envVars:
-      - key: VITE_API_URL
-        value: "http://sentinel-api:5000"
     routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://sentinel-api.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
