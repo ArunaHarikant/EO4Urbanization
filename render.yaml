@@ -32,10 +32,7 @@ services:
     staticPublishPath: dist/public
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: sentinel-api
-          property: url
+        value: "http://sentinel-api:5000"
     routes:
       - type: rewrite
         source: /*
