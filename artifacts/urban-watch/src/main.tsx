@@ -1,6 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { setBaseUrl } from "api-client-react";
 import App from "./App";
+
+if (import.meta.env.VITE_API_URL) {
+  setBaseUrl(import.meta.env.VITE_API_URL);
+}
+
 import "./index.css";
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';

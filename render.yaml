@@ -29,6 +29,19 @@ services:
     repo: https://github.com/ArunaHarikant/EO4Urbanization.git
     rootDir: ./artifacts/urban-watch
     buildCommand: "pnpm install && pnpm run build"
+    publishPath: dist/public
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: sentinel-api
+          property: url
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    rootDir: ./artifacts/urban-watch
+    buildCommand: "pnpm install && pnpm run build"
     staticPublishPath: ./dist
     routes:
       - type: rewrite
