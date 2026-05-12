@@ -1,11 +1,10 @@
-services:
+databases:
   # 1. The PostgreSQL Database
   - name: sentinel-db
-    type: pserv
     plan: free
-    postgres:
-      version: "15"
+    postgresMajorVersion: "15"
 
+services:
   # 2. The Backend API Server
   - name: sentinel-api
     type: web
@@ -17,8 +16,7 @@ services:
     startCommand: "pnpm run start"
     envVars:
       - key: DATABASE_URL
-        fromService:
-          type: pserv
+        fromDatabase:
           name: sentinel-db
           property: connectionString
       - key: NODE_ENV
