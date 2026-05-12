@@ -29,7 +29,7 @@ services:
     repo: https://github.com/ArunaHarikant/EO4Urbanization.git
     rootDir: ./artifacts/urban-watch
     buildCommand: "pnpm install && pnpm run build"
-    publishPath: dist/public
+    staticPublishPath: dist/public
     envVars:
       - key: VITE_API_URL
         fromService:
