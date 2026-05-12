@@ -25,7 +25,6 @@ services:
   # 3. The Frontend React App
   - name: sentinel-webapp
     type: web
-    plan: free
     env: static
     repo: https://github.com/ArunaHarikant/EO4Urbanization.git
     rootDir: ./artifacts/urban-watch
