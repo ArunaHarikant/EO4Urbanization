@@ -28,7 +28,7 @@ services:
     env: static
     repo: https://github.com/ArunaHarikant/EO4Urbanization.git
     rootDir: .
-    buildCommand: "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/urban-watch run build"
+    buildCommand: "pnpm install --frozen-lockfile && pnpm --filter @workspace/urban-watch run build"
     staticPublishPath: artifacts/urban-watch/dist/public
     routes:
       - type: rewrite
